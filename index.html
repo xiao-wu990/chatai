@@ -3,43 +3,54 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>闲聊 AI · 终结版</title>
+    <title>闲聊 AI</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --bg: #ffffff; --bg-side: #f9fafb; --bg-input: #f4f4f5; --border: #e5e5e5;
-            --text: #171717; --sub: #8e8ea0; --accent: #3b82f6; --accent-h: #2563eb; --radius: 12px;
-            --bubble-ai: #f4f4f5; --bubble-user: #3b82f6; --bubble-user-text: #fff;
+            --text: #171717; --sub: #8e8ea0; --accent: #3b82f6; --accent-h: #2563eb;
+            --radius: 16px;
+            --bubble-ai: #f4f4f5; --bubble-user: #3b82f6; --bubble-user-text: #ffffff;
         }
         [data-theme="dark"] {
             --bg: #0d0d0d; --bg-side: #171717; --bg-input: #27272a; --border: #27272a;
             --text: #ededed; --sub: #9ca3af; --accent: #2563eb; --accent-h: #3b82f6;
-            --bubble-ai: #27272a; --bubble-user: #2563eb; --bubble-user-text: #fff;
+            --bubble-ai: #27272a; --bubble-user: #2563eb; --bubble-user-text: #ffffff;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, sans-serif; }
         body { background: var(--bg); color: var(--text); height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
 
-        #auth-page { width: 100%; max-width: 380px; padding: 40px 24px; text-align: center; display: flex; flex-direction: column; gap: 16px; }
-        #auth-page h1 { font-size: 28px; font-weight: 800; background: linear-gradient(135deg, var(--accent), #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .auth-input { padding: 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-input); color: var(--text); width: 100%; outline: none; font-size: 15px; }
-        .auth-btn { padding: 12px; background: var(--accent); color: white; border: none; border-radius: var(--radius); cursor: pointer; font-weight: 600; width: 100%; }
+        #auth-page { width: 100%; max-width: 400px; padding: 40px 24px; text-align: center; display: flex; flex-direction: column; gap: 20px; }
+        #auth-page h1 { font-size: 32px; font-weight: 800; background: linear-gradient(135deg, var(--accent), #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .auth-input { padding: 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-input); color: var(--text); width: 100%; outline: none; font-size: 15px; }
+        .auth-input:focus { border-color: var(--accent); }
+        .auth-btn { padding: 14px; background: var(--accent); color: white; border: none; border-radius: var(--radius); cursor: pointer; font-weight: 600; width: 100%; transition: 0.2s; }
+        .auth-btn:hover { background: var(--accent-h); }
+        .auth-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .auth-switch { color: var(--accent); cursor: pointer; font-weight: 500; margin-top: 8px; display: inline-block; }
+        .theme-top { position: fixed; top: 20px; right: 20px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text); }
 
         #app-page { display: none; width: 100%; height: 100vh; }
         .app { display: flex; width: 100%; height: 100%; }
-        .sidebar { width: 260px; min-width: 260px; background: var(--bg-side); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 16px; height: 100vh; }
-        .logo { font-size: 20px; font-weight: 700; background: linear-gradient(135deg, var(--accent), #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; }
+
+        .sidebar { width: 260px; min-width: 260px; background: var(--bg-side); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 16px; height: 100vh; transition: transform 0.3s; }
+        .logo { font-size: 20px; font-weight: 700; background: linear-gradient(135deg, var(--accent), #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .close-side { display: none; background: none; border: none; font-size: 20px; color: var(--text); cursor: pointer; padding: 8px; }
         .new-btn { width: 100%; padding: 10px; background: var(--accent); color: white; border: none; border-radius: var(--radius); cursor: pointer; margin-bottom: 16px; font-weight: 600; }
         .history-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
-        .h-item { padding: 10px 12px; border-radius: 8px; cursor: pointer; color: var(--sub); font-size: 14px; }
+        .h-item { padding: 10px 12px; border-radius: 8px; cursor: pointer; color: var(--sub); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: 0.2s; }
+        .h-item:hover { background: var(--bg-input); color: var(--text); }
         .h-item.active { background: var(--bg-input); color: var(--text); font-weight: 500; }
-        .logout-btn { padding: 12px; border-top: 1px solid var(--border); cursor: pointer; color: var(--sub); text-align: center; margin-top: auto; }
+        .logout-btn { padding: 12px; border-top: 1px solid var(--border); cursor: pointer; color: var(--sub); text-align: center; margin-top: auto; transition: 0.2s; }
+        .logout-btn:hover { color: #ef4444; }
 
         .main { flex: 1; display: flex; flex-direction: column; background: var(--bg); height: 100vh; }
         .header { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .header h2 { font-size: 18px; font-weight: 600; }
 
-        .messages { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+        .messages { flex: 1; overflow-y: auto; padding: 24px 16%; display: flex; flex-direction: column; gap: 16px; }
+        @media (max-width: 720px) { .messages { padding: 16px; } }
+
         .msg-row { display: flex; gap: 12px; animation: fadeUp 0.3s; }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         .msg-row.user { justify-content: flex-end; }
@@ -48,20 +59,30 @@
         .user .bubble { background: var(--bubble-user); color: var(--bubble-user-text); border-bottom-right-radius: 4px; }
         .ai .bubble { background: var(--bubble-ai); color: var(--text); border-bottom-left-radius: 4px; }
 
-        .input-area { padding: 16px 24px; border-top: 1px solid var(--border); }
-        .input-box { display: flex; gap: 12px; background: var(--bg-input); border-radius: 24px; padding: 6px 6px 6px 20px; border: 1px solid transparent; }
+        .thinking { display: flex; align-items: center; gap: 8px; color: var(--sub); font-size: 14px; padding: 4px 0; }
+        .thinking span { width: 6px; height: 6px; border-radius: 50%; background: var(--sub); animation: bounce 1.4s infinite both; }
+        .thinking span:nth-child(1) { animation-delay: -0.32s; }
+        .thinking span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%,80%,100% { transform: scale(0.6); } 40% { transform: scale(1); } }
+
+        .input-area { padding: 16px 16%; border-top: 1px solid var(--border); }
+        @media (max-width: 720px) { .input-area { padding: 12px; } }
+        .input-box { display: flex; gap: 12px; background: var(--bg-input); border-radius: 24px; padding: 6px 6px 6px 20px; border: 1px solid transparent; transition: 0.2s; }
         .input-box:focus-within { border-color: var(--accent); background: var(--bg); }
         .input-box input { flex: 1; border: none; background: transparent; padding: 10px 0; outline: none; font-size: 15px; color: var(--text); }
         .send-btn { background: var(--accent); color: white; border: none; padding: 8px 20px; border-radius: 20px; font-weight: 600; cursor: pointer; }
 
-        @media (max-width: 800px) {
+        @media (max-width: 720px) {
             .sidebar { position: fixed; left: -260px; top: 0; z-index: 100; border-radius: 0; }
             .sidebar.open { left: 0; }
+            .close-side { display: block; }
         }
     </style>
 </head>
 <body>
+
     <div id="auth-page">
+        <button class="theme-top" onclick="toggleTheme()">🌓</button>
         <h1>闲聊 AI</h1>
         <div style="color:var(--sub);font-size:14px;">福建省闲聊部队科技</div>
         <div style="margin-top:12px;font-size:18px;font-weight:600;" id="authTitle">登录</div>
@@ -75,7 +96,10 @@
     <div id="app-page">
         <div class="app">
             <div class="sidebar" id="sidebar">
-                <div class="logo">闲聊 AI</div>
+                <div class="logo">
+                    <span>闲聊 AI</span>
+                    <button class="close-side" onclick="toggleSidebar()">✕</button>
+                </div>
                 <button class="new-btn" onclick="createNewChat()">+ 新建对话</button>
                 <div class="history-list" id="historyList"></div>
                 <div class="logout-btn" onclick="logout()">退出登录</div>
@@ -94,10 +118,13 @@
     </div>
 
 <script>
-    // 配置
+    // ==========================================================
+    // 核心配置
+    // ==========================================================
     const supabaseUrl = 'https://hhpahgteqmcrsslmjrra.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhocGFoZ3RlcW1jcnNzbG1qcnJhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjA0Njc5OTIsImV4cCI6MjAzNjA0Mzk5Mn0.7iUfFMdUx1wZgE2vP2U6hVHXg9zrH4hGyf1-xNqHkJo';
+    const supabaseKey = 'sb_publishable_gagVSZUISWcjhivSJTyaCQ_CuPyQqY6';
     const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
     const API_KEY = "f841df96e8294cb1bee1762ef21fb616.vg1dRSkV2KTgyZ7Y";
     const API_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions";
 
@@ -113,45 +140,43 @@
         document.getElementById('authTitle').textContent = isLogin ? '登录' : '注册';
         document.getElementById('authBtn').textContent = isLogin ? '登录' : '注册';
         document.querySelector('.auth-switch').textContent = isLogin ? '没有账号？去注册' : '已有账号？去登录';
-        document.getElementById('authError').style.display = 'none';
     }
 
-    // 登录/注册事件 (彻底不卡死)
-    function handleAuth() {
+    // 处理登录
+    async function handleAuth() {
         const email = document.getElementById('email').value.trim();
         const pass = document.getElementById('password').value.trim();
         const err = document.getElementById('authError');
-        if(!email || !pass) { err.textContent = '⚠️ 请填写完整'; err.style.display='block'; return; }
+        if(!email || !pass) { err.textContent = '请填写完整'; err.style.display='block'; return; }
         
         const btn = document.getElementById('authBtn');
         btn.disabled = true; btn.textContent = '处理中...';
         err.style.display = 'none';
 
-        let promise = isLogin ? supabase.auth.signInWithPassword({ email, password: pass }) : supabase.auth.signUp({ email, password: pass });
-        
-        promise.then(res => {
-            if(res.error) throw res.error;
+        try {
+            let res;
+            if(isLogin) res = await supabase.auth.signInWithPassword({ email, password: pass });
+            else res = await supabase.auth.signUp({ email, password: pass });
+            if(res.error) throw new Error(res.error.message);
             if(res.data.session || res.data.user) {
                 document.getElementById('auth-page').style.display = 'none';
                 document.getElementById('app-page').style.display = 'flex';
                 loadHistory();
             } else {
-                if(!isLogin) { alert('✅ 注册成功！请切换为登录。'); toggleAuthMode(); }
+                if(!isLogin) { alert('注册成功！请登录。'); toggleAuthMode(); }
             }
-        }).catch(e => {
+        } catch(e) {
             err.textContent = '❌ ' + e.message; err.style.display = 'block';
-        }).finally(() => {
+        } finally {
             btn.disabled = false; btn.textContent = isLogin ? '登录' : '注册';
-        });
+        }
     }
 
     // 退出
     function logout() { supabase.auth.signOut().then(() => location.reload()); }
 
-    // 侧边栏
+    // 侧边栏与聊天
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-
-    // 消息操作
     function addMsg(role, text) {
         let row = document.createElement('div'); row.className = `msg-row ${role}`;
         row.innerHTML = `<div class="bubble">${text.replace(/\n/g,'<br>')}</div>`;
@@ -160,78 +185,72 @@
     function clearChatBox() { messagesEl.innerHTML = ''; }
 
     // 加载历史
-    function loadHistory() {
-        supabase.auth.getUser().then(userRes => {
-            const user = userRes.data.user;
-            if(!user) return;
-            supabase.from('chats').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).then(({ data }) => {
-                historyList.innerHTML = '';
-                if(!data || data.length === 0) {
-                    historyList.innerHTML = '<div style="color:var(--sub);padding:20px;text-align:center;">暂无历史记录</div>';
-                    createNewChat(); return;
-                }
-                data.forEach(doc => {
-                    const div = document.createElement('div');
-                    div.className = 'h-item' + (doc.id === currentChatId ? ' active' : '');
-                    div.textContent = doc.title || '新对话';
-                    div.onclick = () => loadChat(doc.id);
-                    historyList.appendChild(div);
-                });
-                if(!currentChatId && data.length > 0) loadChat(data[0].id);
-            });
+    async function loadHistory() {
+        const user = (await supabase.auth.getUser()).data.user;
+        if(!user) return;
+        const { data } = await supabase.from('chats').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+        historyList.innerHTML = '';
+        if(!data || data.length === 0) {
+            historyList.innerHTML = '<div style="color:var(--sub);padding:20px;text-align:center;">暂无历史记录</div>';
+            createNewChat(); return;
+        }
+        data.forEach(doc => {
+            const div = document.createElement('div');
+            div.className = 'h-item' + (doc.id === currentChatId ? ' active' : '');
+            div.textContent = doc.title || '新对话';
+            div.onclick = () => loadChat(doc.id);
+            historyList.appendChild(div);
         });
+        if(!currentChatId && data.length > 0) loadChat(data[0].id);
     }
 
-    // 加载具体对话
-    function loadChat(id) {
+    async function loadChat(id) {
         currentChatId = id; clearChatBox();
-        supabase.from('chats').select('messages').eq('id', id).single().then(({ data }) => {
-            if(data && data.messages) data.messages.forEach(m => addMsg(m.role, m.content));
-            document.getElementById('chatTitle').textContent = data?.title || '对话';
-            document.querySelectorAll('.h-item').forEach(el => el.classList.remove('active'));
-            const el = Array.from(document.querySelectorAll('.h-item')).find(e => e.textContent === (data?.title || '新对话'));
-            if(el) el.classList.add('active');
-        });
+        const { data } = await supabase.from('chats').select('messages').eq('id', id).single();
+        if(data && data.messages) data.messages.forEach(m => addMsg(m.role, m.content));
+        document.getElementById('chatTitle').textContent = data?.title || '对话';
+        document.querySelectorAll('.h-item').forEach(el => el.classList.remove('active'));
+        const el = Array.from(document.querySelectorAll('.h-item')).find(e => e.textContent === (data?.title || '新对话'));
+        if(el) el.classList.add('active');
     }
 
-    // 新建对话
-    function createNewChat() {
-        supabase.auth.getUser().then(userRes => {
-            const user = userRes.data.user;
-            if(!user) return;
-            supabase.from('chats').insert({ user_id: user.id, title: '新对话', messages: [{ role: 'ai', content: '你好！新对话已开启，有什么想聊的？' }] }).select().then(({ data }) => {
-                if(data && data.length > 0) loadHistory();
-            });
-        });
+    async function createNewChat() {
+        const user = (await supabase.auth.getUser()).data.user;
+        if(!user) return;
+        const { data } = await supabase.from('chats').insert({
+            user_id: user.id,
+            title: '新对话',
+            messages: [{ role: 'ai', content: '你好！新对话已开启，有什么想聊的？' }]
+        }).select();
+        if(data && data.length > 0) loadHistory();
     }
 
     // 发送消息
-    function sendMsg() {
+    async function sendMsg() {
         const input = document.getElementById('userInput'); const text = input.value.trim();
         if(!text || isSending || !currentChatId) return; input.value = ''; addMsg('user', text);
         isSending = true;
 
         const thinkRow = document.createElement('div'); thinkRow.className = 'msg-row ai';
-        thinkRow.innerHTML = `<div class="bubble">思考中...</div>`;
+        thinkRow.innerHTML = `<div class="bubble"><div class="thinking"><span></span><span></span><span></span> 思考中...</div></div>`;
         messagesEl.appendChild(thinkRow);
 
-        // 读取旧消息
-        supabase.from('chats').select('messages').eq('id', currentChatId).single().then(({ data }) => {
-            let msgs = data.messages || []; msgs.push({ role: 'user', content: text });
+        const { data: chatData } = await supabase.from('chats').select('messages').eq('id', currentChatId).single();
+        let msgs = chatData.messages || []; msgs.push({ role: 'user', content: text });
 
-            fetch(API_URL, {
+        try {
+            const res = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ model: 'glm-4v', messages: [{ role: 'system', content: '极简AI，回答不超过50字，直击重点。' }, ...msgs] })
-            }).then(res => res.json()).then(dataRes => {
-                thinkRow.remove();
-                const reply = dataRes.choices[0].message.content;
-                addMsg('ai', reply); msgs.push({ role: 'assistant', content: reply });
-                supabase.from('chats').update({ messages: msgs, title: msgs[0]?.content?.substring(0,20) || '对话' }).eq('id', currentChatId).then(() => loadHistory());
-            }).catch(() => {
-                thinkRow.remove(); addMsg('ai', '⚠️ 请求失败，请稍后再试。');
-            }).finally(() => { isSending = false; });
-        });
+            });
+            thinkRow.remove();
+            if(!res.ok) throw new Error('API Error');
+            const dataRes = await res.json(); const reply = dataRes.choices[0].message.content;
+            addMsg('ai', reply); msgs.push({ role: 'assistant', content: reply });
+            await supabase.from('chats').update({ messages: msgs, title: msgs[0]?.content?.substring(0,20) || '对话' }).eq('id', currentChatId);
+            loadHistory();
+        } catch(e) { thinkRow.remove(); addMsg('ai', '⚠️ 请求失败，请稍后再试。'); } finally { isSending = false; }
     }
 
     // 主题切换
@@ -241,17 +260,6 @@
         localStorage.setItem('theme', cur === 'light' ? 'dark' : 'light');
     }
     (function() { const saved = localStorage.getItem('theme'); if (saved) document.documentElement.setAttribute('data-theme', saved); })();
-
-    // 启动检测
-    window.onload = function() {
-        supabase.auth.getSession().then(session => {
-            if(session.data.session) {
-                document.getElementById('auth-page').style.display = 'none';
-                document.getElementById('app-page').style.display = 'flex';
-                loadHistory();
-            }
-        });
-    }
 </script>
 </body>
 </html>
